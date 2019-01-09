@@ -2,15 +2,36 @@
 #include "PandaJ2534Device.h"
 #include "J2534Frame.h"
 
-PandaJ2534Device::PandaJ2534Device(std::unique_ptr<panda::Panda> new_panda) : txInProgress(FALSE) {
-	this->m_client.init();
+#include "can_tcp_client.h"
+can_tcp_client *g_client = nullptr;
 
+PandaJ2534Device::PandaJ2534Device(std::unique_ptr<panda::Panda> new_panda) : txInProgress(FALSE) {
 	this->panda = std::move(new_panda);
 
 	this->panda->set_esp_power(FALSE);
 	this->panda->set_safety_mode(panda::SAFETY_ALLOUTPUT);
 	this->panda->set_can_loopback(FALSE);
 	this->panda->set_alt_setting(0);
+
+	this->thread_kill_event = CreateEvent(NULL, TRUE, FALSE, NULL);
+
+	DWORD canListenThreadID;
+	this->can_recv_handle = CreateThread(NULL, 0, _can_recv_threadBootstrap, (LPVOID)this, 0, &canListenThreadID);
+
+	DWORD canProcessThreadID;
+	this->can_process_handle = CreateThread(NULL, 0, _can_process_threadBootstrap, (LPVOID)this, 0, &canProcessThreadID);
+
+	DWORD flowControlSendThreadID;
+	this->flow_control_wakeup_event = CreateEvent(NULL, TRUE, FALSE, NULL);
+	this->flow_control_thread_handle = CreateThread(NULL, 0, _msg_tx_threadBootstrap, (LPVOID)this, 0, &flowControlSendThreadID);
+};
+
+PandaJ2534Device::PandaJ2534Device() : txInProgress(FALSE) {
+	if (g_client == nullptr) {
+		g_client = new can_tcp_client();
+		g_client->init();
+	}
+
 
 	this->thread_kill_event = CreateEvent(NULL, TRUE, FALSE, NULL);
 
@@ -41,10 +62,13 @@ PandaJ2534Device::~PandaJ2534Device() {
 }
 
 std::shared_ptr<PandaJ2534Device> PandaJ2534Device::openByName(std::string sn) {
+	return std::unique_ptr<PandaJ2534Device>(new PandaJ2534Device());
+#if 0
 	auto p = panda::Panda::openPanda("");
 	if (p == nullptr)
 		return nullptr;
 	return std::unique_ptr<PandaJ2534Device>(new PandaJ2534Device(std::move(p)));
+#endif
 }
 
 DWORD PandaJ2534Device::closeChannel(unsigned long ChannelID) {
@@ -76,9 +100,15 @@ DWORD PandaJ2534Device::addChannel(std::shared_ptr<J2534Connection>& conn, unsig
 }
 
 DWORD PandaJ2534Device::can_recv_thread() {
+#if 0
 	this->panda->can_clear(panda::PANDA_CAN_RX);
 	this->panda->can_rx_q_push(this->thread_kill_event);
+#endif
+	while (1) {
+		if (WaitForSingleObject(this->thread_kill_event, 100) == WAIT_OBJECT_0)
+			break;
 
+	}
 	return 0;
 }
 
@@ -86,6 +116,16 @@ DWORD PandaJ2534Device::can_process_thread() {
 	panda::PANDA_CAN_MSG msg_recv[CAN_RX_MSG_LEN];
 
 	while (true) {
+		if (WaitForSingleObject(this->thread_kill_event, 0) == WAIT_OBJECT_0)
+			break;
+		char buf[12];
+		if (!g_client->recv_can_msg(buf))
+			break;
+		J2534Frame msg_out(buf);
+		for (auto& conn : this->connections)
+			if (conn != nullptr && conn->isProtoCan())
+				conn->processMessage(msg_out);
+#if 0
 		HANDLE phSignals[2] = { this->panda->rx_queue_not_empty_event, this->thread_kill_event };
 		auto dwError = WaitForMultipleObjects(2, phSignals, FALSE, INFINITE);
 		if (dwError == WAIT_OBJECT_0 + 1) {
@@ -98,7 +138,7 @@ DWORD PandaJ2534Device::can_process_thread() {
 		if (count == 0) {
 			continue;
 		}
-		
+
 		for (int i = 0; i < count; i++) {
 			auto msg_in = msg_recv[i];
 			J2534Frame msg_out(msg_in);
@@ -145,6 +185,7 @@ DWORD PandaJ2534Device::can_process_thread() {
 						conn->processMessage(msg_out);
 			}
 		}
+#endif
 	}
 
 	return 0;

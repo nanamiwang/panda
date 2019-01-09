@@ -86,6 +86,7 @@ long check_valid_ChannelID(unsigned long ChannelID) {
 #define get_channel(ChannelID) (get_device(ChannelID)->connections[EXTRACT_CID(ChannelID)])
 
 PANDAJ2534DLL_API long PTAPI    PassThruOpen(void *pName, unsigned long *pDeviceID) {
+	logA("PassThruOpen");
 	#pragma EXPORT
 	if (pDeviceID == NULL) return ret_code(ERR_NULL_PARAMETER);
 	std::string sn = (pName == NULL) ? "" : std::string((char*)pName);
@@ -122,6 +123,7 @@ PANDAJ2534DLL_API long PTAPI    PassThruOpen(void *pName, unsigned long *pDevice
 	return ret_code(STATUS_NOERROR);
 }
 PANDAJ2534DLL_API long PTAPI	PassThruClose(unsigned long DeviceID) {
+	logA("PassThruClose");
 	#pragma EXPORT
 	if (check_valid_DeviceID(DeviceID) != STATUS_NOERROR) return J25334LastError;
 	get_device(DeviceID) = nullptr;

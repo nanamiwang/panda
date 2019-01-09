@@ -59,7 +59,7 @@ public:
 
 	}
 
-	bool recv_can_msg(unsigned char *out_buf) {
+	bool recv_can_msg(char *out_buf) {
 		char buf[1024];
 		int len = sizeof(buf);
 		int recved = 0;
@@ -74,7 +74,7 @@ public:
 		recved = 0;
 		desired = 12;
 		while (recved < desired) {
-			int ret = recv(m_sock, (char *)(out_buf + recved), desired - recved, 0);
+			int ret = recv(m_sock, (out_buf + recved), desired - recved, 0);
 			if (ret <= 0) {
 				logA("recv error %d", ret);
 				return false;

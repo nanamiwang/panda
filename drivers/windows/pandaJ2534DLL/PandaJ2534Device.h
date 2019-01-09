@@ -10,7 +10,6 @@
 #include "Action.h"
 #include "MessageTx.h"
 #include "J2534Connection.h"
-#include "can_tcp_client.h"
 
 
 class J2534Connection;
@@ -25,6 +24,7 @@ J2534Connections.
 class PandaJ2534Device {
 public:
 	PandaJ2534Device(std::unique_ptr<panda::Panda> new_panda);
+	PandaJ2534Device();
 
 	~PandaJ2534Device();
 
@@ -82,6 +82,4 @@ private:
 	std::set<std::shared_ptr<J2534Connection>> ConnTxSet;
 	Mutex connTXSet_mutex;
 	BOOL txInProgress;
-
-	can_tcp_client m_client;
 };

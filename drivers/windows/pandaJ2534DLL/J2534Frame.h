@@ -8,6 +8,15 @@ public:
 	J2534Frame(unsigned long ProtocolID, unsigned long RxStatus=0, unsigned long TxFlags=0, unsigned long Timestamp=0) :
 		ProtocolID(ProtocolID), RxStatus(RxStatus), TxFlags(TxFlags), Timestamp(Timestamp), ExtraDataIndex(0), Data("") { };
 
+	J2534Frame(char *buf) {
+		ProtocolID = CAN;
+		ExtraDataIndex = 8 + 4;
+		Data.reserve(8 + 4);
+		Data = std::string(buf, 8 + 4);
+		Timestamp = 0L;
+		RxStatus = 0;
+	}
+
 	J2534Frame(const panda::PANDA_CAN_MSG& msg_in) {
 		ProtocolID = CAN;
 		ExtraDataIndex = msg_in.len + 4;

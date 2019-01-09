@@ -22,6 +22,7 @@
 #include <windows.h>
 #include <winusb.h>
 
+
 #if defined(UNICODE)
 #define _tcout std::wcout
 #define tstring std::wstring
@@ -179,6 +180,9 @@ namespace panda {
 			HANDLE DeviceHandle,
 			tstring devPath_,
 			std::string sn_
+		);
+
+		Panda(
 		);
 
 		int control_transfer(
