@@ -5,6 +5,8 @@
 
 #pragma comment(lib, "ws2_32")
 
+#define PACKET_TYPE_CAN_FRAME 1U
+
 class can_tcp_client {
 public:
 	can_tcp_client() {
@@ -31,6 +33,7 @@ public:
 	}
 
 	void exit() {
+		logA("can tcp exit");
 		closesocket(m_sock);
 	}
 
@@ -52,11 +55,22 @@ public:
 	}
 
 	bool send_can_msg(const char *data, unsigned long len) {
+		logA("send_can_msg");
+		unsigned short total_len = htons(sizeof(unsigned short) * 2 + len);
+		unsigned short t = htons(PACKET_TYPE_CAN_FRAME);
+		if (sendall((char *)&total_len, sizeof(unsigned short)) == -1) {
+			logA("Send len error");
+			return false;
+		}
+		if (sendall((char *)&t, sizeof(unsigned short)) == -1) {
+			logA("Send type error");
+			return false;
+		}
 		if (sendall(data, len) == -1) {
 			logA("Send error");
 			return false;
 		}
-
+		logA("send_can_msg out");
 	}
 
 	bool recv_can_msg(char *out_buf) {
@@ -70,6 +84,7 @@ public:
 				logA("recv error %d", ret);
 				return false;
 			}
+			recved += ret;
 		}
 		recved = 0;
 		desired = 12;
@@ -79,6 +94,7 @@ public:
 				logA("recv error %d", ret);
 				return false;
 			}
+			recved += ret;
 		}
 		return true;
 	}

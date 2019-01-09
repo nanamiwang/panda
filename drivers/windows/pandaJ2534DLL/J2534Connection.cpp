@@ -170,7 +170,8 @@ long J2534Connection::clearTXBuff() {
 	if (auto panda_ps = this->panda_dev.lock()) {
 		synchronized(staged_writes_lock) {
 			this->txbuff = {};
-			panda_ps->panda->can_clear(panda::PANDA_CAN1_TX);
+			if(panda_ps->panda.get())
+				panda_ps->panda->can_clear(panda::PANDA_CAN1_TX);
 		}
 	}
 	return STATUS_NOERROR;
@@ -179,7 +180,8 @@ long J2534Connection::clearRXBuff() {
 	if (auto panda_ps = this->panda_dev.lock()) {
 		synchronized(messageRxBuff_mutex) {
 			this->messageRxBuff = {};
-			panda_ps->panda->can_clear(panda::PANDA_CAN_RX);
+			if (panda_ps->panda.get())
+				panda_ps->panda->can_clear(panda::PANDA_CAN_RX);
 		}
 	}
 	return STATUS_NOERROR;

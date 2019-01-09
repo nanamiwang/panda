@@ -13,8 +13,8 @@ J2534Connection_CAN::J2534Connection_CAN(
 
 	if (BaudRate % 100 || BaudRate < 10000 || BaudRate > 5000000)
 		throw ERR_INVALID_BAUDRATE;
-
-	panda_dev->panda->set_can_speed_cbps(panda::PANDA_CAN1, BaudRate/100);
+	if(panda_dev->panda.get())
+		panda_dev->panda->set_can_speed_cbps(panda::PANDA_CAN1, BaudRate/100);
 };
 
 unsigned long J2534Connection_CAN::validateTxMsg(PASSTHRU_MSG* msg) {
@@ -34,8 +34,8 @@ void J2534Connection_CAN::setBaud(unsigned long BaudRate) {
 	if (auto panda_dev = this->getPandaDev()) {
 		if (BaudRate % 100 || BaudRate < 10000 || BaudRate > 5000000)
 			throw ERR_NOT_SUPPORTED;
-
-		panda_dev->panda->set_can_speed_cbps(panda::PANDA_CAN1, (uint16_t)(BaudRate / 100));
+		if (panda_dev->panda.get())
+			panda_dev->panda->set_can_speed_cbps(panda::PANDA_CAN1, (uint16_t)(BaudRate / 100));
 		return J2534Connection::setBaud(BaudRate);
 	} else {
 		throw ERR_DEVICE_NOT_CONNECTED;

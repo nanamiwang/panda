@@ -47,6 +47,12 @@ PandaJ2534Device::PandaJ2534Device() : txInProgress(FALSE) {
 };
 
 PandaJ2534Device::~PandaJ2534Device() {
+	if (g_client != nullptr) {
+		g_client->exit();
+		delete g_client;
+		g_client = nullptr;
+	}
+
 	SetEvent(this->thread_kill_event);
 	DWORD res = WaitForSingleObject(this->can_recv_handle, INFINITE);
 	CloseHandle(this->can_recv_handle);
@@ -121,6 +127,8 @@ DWORD PandaJ2534Device::can_process_thread() {
 		char buf[12];
 		if (!g_client->recv_can_msg(buf))
 			break;
+		if (buf[2] == 0x03 || buf[2] == 0x01)
+			continue;
 		J2534Frame msg_out(buf);
 		for (auto& conn : this->connections)
 			if (conn != nullptr && conn->isProtoCan())

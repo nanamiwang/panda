@@ -187,6 +187,7 @@ PANDAJ2534DLL_API long PTAPI	PassThruConnect(unsigned long DeviceID, unsigned lo
 	return ret_code(err);
 }
 PANDAJ2534DLL_API long PTAPI	PassThruDisconnect(unsigned long ChannelID) {
+	logA("PassThruDisconnect");
 	#pragma EXPORT
 	unsigned long res = check_valid_DeviceID(ChannelID);
 	if (res == ERR_INVALID_DEVICE_ID) return ret_code(ERR_INVALID_CHANNEL_ID);
@@ -201,6 +202,7 @@ PANDAJ2534DLL_API long PTAPI	PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_
 	return ret_code(get_channel(ChannelID)->PassThruReadMsgs(pMsg, pNumMsgs, Timeout));
 }
 PANDAJ2534DLL_API long PTAPI	PassThruWriteMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsigned long *pNumMsgs, unsigned long Timeout) {
+	logA("PassThruWriteMsgs");
 	#pragma EXPORT
 	if (pMsg == NULL || pNumMsgs == NULL) return ret_code(ERR_NULL_PARAMETER);
 	if (check_valid_ChannelID(ChannelID) != STATUS_NOERROR) return J25334LastError;
@@ -255,7 +257,7 @@ PANDAJ2534DLL_API long PTAPI	PassThruReadVersion(unsigned long DeviceID, char *p
 	if (check_valid_DeviceID(DeviceID) != STATUS_NOERROR) return J25334LastError;
 
 	auto& panda = get_device(DeviceID);
-	auto fw_version = panda->panda->get_version();
+	auto fw_version = panda->panda.get()? panda->panda->get_version() : std::string("V1.0");
 	strcpy_s(pFirmwareVersion, 80, fw_version.c_str());
 
 	std::string j2534dll_ver;
@@ -272,6 +274,7 @@ PANDAJ2534DLL_API long PTAPI	PassThruReadVersion(unsigned long DeviceID, char *p
 	return ret_code(STATUS_NOERROR);
 }
 PANDAJ2534DLL_API long PTAPI	PassThruGetLastError(char *pErrorDescription) {
+	logA("PassThruGetLastError, 0x%X", J25334LastError);
 	#pragma EXPORT
 	if (pErrorDescription == NULL) return ret_code(ERR_NULL_PARAMETER);
 	switch (J25334LastError) {
@@ -363,6 +366,7 @@ PANDAJ2534DLL_API long PTAPI	PassThruGetLastError(char *pErrorDescription) {
 }
 PANDAJ2534DLL_API long PTAPI	PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID,
 	                                          void *pInput, void *pOutput) {
+	logA("PassThruIoctl, IoctlID: 0x%X", IoctlID);
 	#pragma EXPORT
 	if (check_valid_ChannelID(ChannelID) != STATUS_NOERROR) return J25334LastError;
 	auto& dev_entry = get_device(ChannelID);
@@ -398,8 +402,11 @@ PANDAJ2534DLL_API long PTAPI	PassThruIoctl(unsigned long ChannelID, unsigned lon
 		break;
 	}
 	case READ_VBATT:
-		panda::PANDA_HEALTH health = dev_entry->panda->get_health();
-		*(unsigned long*)pOutput = health.voltage;
+		if (dev_entry->panda.get()) {
+			panda::PANDA_HEALTH health = dev_entry->panda->get_health();
+			*(unsigned long*)pOutput = health.voltage;
+		} else
+			*(unsigned long*)pOutput = 5;
 		break;
 	case FIVE_BAUD_INIT:
 		if (!pInput || !pOutput) return ret_code(ERR_NULL_PARAMETER);
