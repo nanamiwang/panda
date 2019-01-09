@@ -54,7 +54,7 @@ long J2534Connection::PassThruReadMsgs(PASSTHRU_MSG *pMsg, unsigned long *pNumMs
 		std::string hex;
 		std::for_each(msg_in.Data.begin(), msg_in.Data.end(), [&](char &c) {
 			char buff[4];
-			snprintf(buff, sizeof(buff), "%2X", (unsigned char )c);
+			snprintf(buff, sizeof(buff), "%02X", (unsigned char )c);
 			hex += buff;
 		});
 		logA("PassThruReadMsgs, protocol: %X, len: %u, data: %s", msg_out->ProtocolID, msg_out->DataSize, hex.c_str());
@@ -74,7 +74,7 @@ long J2534Connection::PassThruWriteMsgs(PASSTHRU_MSG *pMsg, unsigned long *pNumM
 		std::string hex;
 		for(int i = 0 ; i < msg->DataSize; i ++) {
 			char buff[4];
-			snprintf(buff, sizeof(buff), "%2X", msg->Data[i]);
+			snprintf(buff, sizeof(buff), "%02X", msg->Data[i]);
 			hex += buff;
 		}
 		logA("PassThruWriteMsgs, protocol %X, len: %u, data: %s", msg->ProtocolID, msg->DataSize, hex.c_str());

@@ -10,6 +10,8 @@
 #include "Action.h"
 #include "MessageTx.h"
 #include "J2534Connection.h"
+#include "can_tcp_client.h"
+
 
 class J2534Connection;
 class Action;
@@ -80,4 +82,6 @@ private:
 	std::set<std::shared_ptr<J2534Connection>> ConnTxSet;
 	Mutex connTXSet_mutex;
 	BOOL txInProgress;
+
+	can_tcp_client m_client;
 };
