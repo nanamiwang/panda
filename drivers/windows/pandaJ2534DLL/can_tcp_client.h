@@ -1,6 +1,9 @@
 #pragma once
+#define _WINSOCK_DEPRECATED_NO_WARNINGS 1
 #include <winsock2.h>
 #include "log.h"
+
+#pragma comment(lib, "ws2_32")
 
 class can_tcp_client {
 public:

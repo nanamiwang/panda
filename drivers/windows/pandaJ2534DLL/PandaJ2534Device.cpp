@@ -3,6 +3,8 @@
 #include "J2534Frame.h"
 
 PandaJ2534Device::PandaJ2534Device(std::unique_ptr<panda::Panda> new_panda) : txInProgress(FALSE) {
+	this->m_client.init();
+
 	this->panda = std::move(new_panda);
 
 	this->panda->set_esp_power(FALSE);

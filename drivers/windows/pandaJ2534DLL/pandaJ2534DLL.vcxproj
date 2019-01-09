@@ -90,6 +90,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\panda\panda.h" />
+    <ClInclude Include="can_tcp_client.h" />
     <ClInclude Include="constants_ISO15765.h" />
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="MessagePeriodic.h" />
