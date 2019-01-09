@@ -171,6 +171,8 @@ namespace panda {
 		std::string serial_read(PANDA_SERIAL_PORT port_number);
 		int serial_write(PANDA_SERIAL_PORT port_number, const void* buff, uint16_t len);
 		bool serial_clear(PANDA_SERIAL_PORT port_number);
+
+		HANDLE rx_queue_not_empty_event;
 	private:
 		Panda(
 			WINUSB_INTERFACE_HANDLE WinusbHandle,
@@ -232,6 +234,7 @@ namespace panda {
 		CAN_RX_PIPE_READ can_rx_q[CAN_RX_QUEUE_LEN];
 		unsigned long w_ptr = 0;
 		unsigned long r_ptr = 0;
+
 	};
 
 }

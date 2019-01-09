@@ -61,6 +61,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PANDAJ2534DLL_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir);</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -124,6 +125,7 @@
     <ClCompile Include="J2534Connection_CAN.cpp" />
     <ClCompile Include="J2534Connection_ISO15765.cpp" />
     <ClCompile Include="J2534MessageFilter.cpp" />
+    <ClCompile Include="log.cpp" />
     <ClCompile Include="MessagePeriodic.cpp" />
     <ClCompile Include="MessageTxTimeout.cpp" />
     <ClCompile Include="MessageTx_CAN.cpp" />

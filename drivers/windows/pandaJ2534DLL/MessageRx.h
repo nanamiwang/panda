@@ -26,7 +26,8 @@ public:
 			//A frame was received that could have held more data.
 			//No examples of this protocol show that happening, so
 			//it will be assumed that it is grounds to reset rx.
-			return FALSE;
+			logA("more data required, %u < %u", piece.size(), payload_len);
+			//return FALSE;
 		}
 		msg += piece.substr(0, payload_len);
 

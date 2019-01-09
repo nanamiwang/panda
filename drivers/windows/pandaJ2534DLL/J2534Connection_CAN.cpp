@@ -19,8 +19,10 @@ J2534Connection_CAN::J2534Connection_CAN(
 
 unsigned long J2534Connection_CAN::validateTxMsg(PASSTHRU_MSG* msg) {
 	if ((msg->DataSize < this->getMinMsgLen() || msg->DataSize > this->getMaxMsgLen() ||
-		(val_is_29bit(msg->TxFlags) != this->_is_29bit() && !check_bmask(this->Flags, CAN_ID_BOTH))))
+		(val_is_29bit(msg->TxFlags) != this->_is_29bit() && !check_bmask(this->Flags, CAN_ID_BOTH)))) {
+		logA("Invalid tx msg len: %u, min: %u, max: %u, flags: %X, %X", msg->DataSize, this->getMinMsgLen(), this->getMaxMsgLen(), msg->TxFlags, this->Flags);
 		return ERR_INVALID_MSG;
+	}
 	return STATUS_NOERROR;
 }
 

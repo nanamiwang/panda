@@ -143,6 +143,9 @@
     <ClCompile Include="MessagePeriodic.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="log.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="pandaJ2534DLL.rc">

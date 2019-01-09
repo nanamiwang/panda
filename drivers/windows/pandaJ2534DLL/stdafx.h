@@ -12,3 +12,4 @@
 #include <ctime>
 #include <chrono>
 #include <tchar.h>
+#include "log.h"

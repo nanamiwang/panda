@@ -10,8 +10,10 @@ J2534Connection::J2534Connection(
 ) : panda_dev(panda_dev), ProtocolID(ProtocolID), Flags(Flags), BaudRate(BaudRate), port(0) { }
 
 unsigned long J2534Connection::validateTxMsg(PASSTHRU_MSG* msg) {
-	if (msg->DataSize < this->getMinMsgLen() || msg->DataSize > this->getMaxMsgLen())
+	if (msg->DataSize < this->getMinMsgLen() || msg->DataSize > this->getMaxMsgLen()) {
+		logA("Invalid tx msg len: %u, min: %u, max: %u", msg->DataSize, this->getMinMsgLen(), this->getMaxMsgLen());
 		return ERR_INVALID_MSG;
+	}
 	return STATUS_NOERROR;
 }
 
@@ -49,6 +51,13 @@ long J2534Connection::PassThruReadMsgs(PASSTHRU_MSG *pMsg, unsigned long *pNumMs
 		msg_out->RxStatus = msg_in.RxStatus;
 		msg_out->ExtraDataIndex = msg_in.ExtraDataIndex;
 		msg_out->TxFlags = 0;
+		std::string hex;
+		std::for_each(msg_in.Data.begin(), msg_in.Data.end(), [&](char &c) {
+			char buff[4];
+			snprintf(buff, sizeof(buff), "%2X", (unsigned char )c);
+			hex += buff;
+		});
+		logA("PassThruReadMsgs, protocol: %X, len: %u, data: %s", msg_out->ProtocolID, msg_out->DataSize, hex.c_str());
 		if (msgnum == *pNumMsgs) break;
 	}
 
@@ -62,6 +71,13 @@ long J2534Connection::PassThruWriteMsgs(PASSTHRU_MSG *pMsg, unsigned long *pNumM
 	//There doesn't seem to be much reason to implement the timeout here.
 	for (int msgnum = 0; msgnum < *pNumMsgs; msgnum++) {
 		PASSTHRU_MSG* msg = &pMsg[msgnum];
+		std::string hex;
+		for(int i = 0 ; i < msg->DataSize; i ++) {
+			char buff[4];
+			snprintf(buff, sizeof(buff), "%2X", msg->Data[i]);
+			hex += buff;
+		}
+		logA("PassThruWriteMsgs, protocol %X, len: %u, data: %s", msg->ProtocolID, msg->DataSize, hex.c_str());
 		if (msg->ProtocolID != this->ProtocolID) {
 			*pNumMsgs = msgnum;
 			return ERR_MSG_PROTOCOL_ID;
@@ -83,6 +99,7 @@ long J2534Connection::PassThruWriteMsgs(PASSTHRU_MSG *pMsg, unsigned long *pNumM
 //The docs say that a device has to support 10 periodic messages, though more is ok.
 //It is easier to store them on the connection, so 10 per connection it is.
 long J2534Connection::PassThruStartPeriodicMsg(PASSTHRU_MSG *pMsg, unsigned long *pMsgID, unsigned long TimeInterval) {
+	logA("PassThruStartPeriodicMsg -->");
 	if (pMsg->DataSize < getMinMsgLen() || pMsg->DataSize > getMaxMsgSingleFrameLen()) return ERR_INVALID_MSG;
 	if (pMsg->ProtocolID != this->ProtocolID) return ERR_MSG_PROTOCOL_ID;
 	if (TimeInterval < 5 || TimeInterval > 65535) return ERR_INVALID_TIME_INTERVAL;
@@ -255,7 +272,7 @@ void J2534Connection::processIOCTLSetConfig(unsigned long Parameter, unsigned lo
 	case T5_MAX:
 		break;				// Just smile and nod.
 	default:
-		printf("Got unknown SET code %X\n", Parameter);
+		logA("Got unknown SET code %X\n", Parameter);
 	}
 
 	// reserved parameters usually mean special equiptment is required
@@ -278,6 +295,6 @@ unsigned long J2534Connection::processIOCTLGetConfig(unsigned long Parameter) {
 	default:
 		// HDS rarely reads off values through ioctl GET_CONFIG, but it often
 		// just wants the call to pass without erroring, so just don't do anything.
-		printf("Got unknown code %X\n", Parameter);
+		logA("Got unknown code %X\n", Parameter);
 	}
 }

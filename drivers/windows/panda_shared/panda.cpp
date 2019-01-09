@@ -1,7 +1,6 @@
 // panda.cpp : Defines the exported functions for the DLL application.
 //
 #include "stdafx.h"
-
 #include "device.h"
 #include "panda.h"
 
@@ -23,6 +22,7 @@ Panda::Panda(
 	this->set_can_loopback(FALSE);
 	this->set_raw_io(TRUE);
 	this->set_alt_setting(0);
+	this->rx_queue_not_empty_event = CreateEvent(NULL, TRUE, FALSE, NULL);
 }
 
 Panda::~Panda() {
@@ -44,6 +44,7 @@ std::vector<std::string> Panda::listAvailablePandas() {
 
 std::unique_ptr<Panda> Panda::openPanda(std::string sn)
 {
+	logA("Opening panda device");
 	auto map_sn_to_devpath = detect_pandas();
 
 	if (map_sn_to_devpath.empty()) return nullptr;
@@ -391,7 +392,7 @@ bool Panda::can_rx_q_push(HANDLE kill_event, DWORD timeoutms) {
 
 		// Pause if there is not a slot available in the queue
 		if (n_ptr == this->r_ptr) {
-			printf("RX queue full!\n");
+			logA("RX queue full!");
 			Sleep(1);
 			continue;
 		}
@@ -424,10 +425,10 @@ bool Panda::can_rx_q_push(HANDLE kill_event, DWORD timeoutms) {
 				if (!GetOverlappedResult(this->usbh, &this->can_rx_q[w_ptr].overlapped, &this->can_rx_q[w_ptr].count, TRUE)) {
 					// TODO: handle other error cases better.
 					dwError = GetLastError();
-					printf("Got overlap error %d\n", dwError);
-
+					logA("Got overlap error %d\n", dwError);
 					continue;
 				}
+				::SetEvent(this->rx_queue_not_empty_event);
 			}
 			else {
 				WinUsb_AbortPipe(this->usbh, 0x81);
@@ -456,7 +457,7 @@ void Panda::can_rx_q_pop(PANDA_CAN_MSG msg_out[], int &count) {
 
 	// No data left in queue
 	if (this->r_ptr == this->w_ptr) {
-		Sleep(1);
+		::ResetEvent(this->rx_queue_not_empty_event);
 		return;
 	}
 

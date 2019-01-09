@@ -84,7 +84,10 @@ DWORD PandaJ2534Device::can_process_thread() {
 	panda::PANDA_CAN_MSG msg_recv[CAN_RX_MSG_LEN];
 
 	while (true) {
-		if (!WaitForSingleObject(this->thread_kill_event, 0)) {
+		HANDLE phSignals[2] = { this->panda->rx_queue_not_empty_event, this->thread_kill_event };
+		auto dwError = WaitForMultipleObjects(2, phSignals, FALSE, INFINITE);
+		if (dwError == WAIT_OBJECT_0 + 1) {
+			logA("can_process_thread exit...");
 			break;
 		}
 

@@ -15,6 +15,7 @@
 // A quick way to avoid the name mangling that __stdcall liked to do
 #define EXPORT comment(linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__)
 
+
 std::vector<std::shared_ptr<PandaJ2534Device>> pandas;
 
 int J25334LastError = 0;
@@ -134,7 +135,7 @@ PANDAJ2534DLL_API long PTAPI	PassThruConnect(unsigned long DeviceID, unsigned lo
 	auto& panda = get_device(DeviceID);
 
 	std::shared_ptr<J2534Connection> conn;
-
+	logA("PassThruConnect, protocol: 0x%X", ProtocolID);
 	//TODO check if channel can be made
 	try {
 		switch (ProtocolID) {
@@ -148,7 +149,8 @@ PANDAJ2534DLL_API long PTAPI	PassThruConnect(unsigned long DeviceID, unsigned lo
 		case ISO9141_PS:
 		case ISO14230: //Only supporting Fast init until panda adds support for 5 BAUD init.
 		case ISO14230_PS:
-			conn = std::make_shared<J2534Connection>(panda, ProtocolID, Flags, BaudRate);
+			return ERR_INVALID_PROTOCOL_ID;
+			//conn = std::make_shared<J2534Connection>(panda, ProtocolID, Flags, BaudRate);
 			break;
 		case CAN:
 		case CAN_PS:

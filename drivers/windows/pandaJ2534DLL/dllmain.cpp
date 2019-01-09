@@ -1,5 +1,9 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
 #include "dllmain.h"
+#define _ELPP_STL_LOGGING
+#include <iostream>
+#include <string>
+#include "log.h"
 
 HMODULE thisdll;
 
@@ -13,6 +17,11 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 	switch (ul_reason_for_call)
 	{
 	case DLL_PROCESS_ATTACH:
+	{
+		log_init("panda_j2534.log");
+		logA("panda started %s", __FILE__);
+		break;
+	}
 	case DLL_THREAD_ATTACH:
 	case DLL_THREAD_DETACH:
 	case DLL_PROCESS_DETACH:
