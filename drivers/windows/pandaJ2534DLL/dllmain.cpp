@@ -19,12 +19,15 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 	case DLL_PROCESS_ATTACH:
 	{
 		log_init("panda_j2534.log");
-		logA("panda started %s", __FILE__);
+		logA("panda started, process: %08X", ::GetCurrentProcessId());
 		break;
 	}
 	case DLL_THREAD_ATTACH:
+		break;
 	case DLL_THREAD_DETACH:
+		break;
 	case DLL_PROCESS_DETACH:
+		logA("panda stopped, process: %08X", ::GetCurrentProcessId());
 		break;
 	}
 	return TRUE;

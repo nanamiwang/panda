@@ -86,7 +86,6 @@ long check_valid_ChannelID(unsigned long ChannelID) {
 #define get_channel(ChannelID) (get_device(ChannelID)->connections[EXTRACT_CID(ChannelID)])
 
 PANDAJ2534DLL_API long PTAPI    PassThruOpen(void *pName, unsigned long *pDeviceID) {
-	logA("PassThruOpen");
 	#pragma EXPORT
 	if (pDeviceID == NULL) return ret_code(ERR_NULL_PARAMETER);
 	std::string sn = (pName == NULL) ? "" : std::string((char*)pName);
@@ -95,12 +94,17 @@ PANDAJ2534DLL_API long PTAPI    PassThruOpen(void *pName, unsigned long *pDevice
 
 	auto new_panda = PandaJ2534Device::openByName(sn);
 	if (new_panda == nullptr) {
-		if(sn == "" && pandas.size() == 1)
+		if (sn == "" && pandas.size() == 1) {
+			logA("PassThruOpen, process: 0x%08X, ERR_DEVICE_IN_USE 1", ::GetCurrentProcessId());
 			return ret_code(ERR_DEVICE_IN_USE);
-		for (auto& pn : pandas) {
-			if (pn->panda->get_usb_sn() == sn)
-				return ret_code(ERR_DEVICE_IN_USE);
 		}
+		for (auto& pn : pandas) {
+			if (pn->panda->get_usb_sn() == sn) {
+				logA("PassThruOpen, process: 0x%08X, ERR_DEVICE_IN_USE 2", ::GetCurrentProcessId());
+				return ret_code(ERR_DEVICE_IN_USE);
+			}
+		}
+		logA("PassThruOpen, process: 0x%08X, ERR_DEVICE_NOT_CONNECTED", ::GetCurrentProcessId());
 		return ret_code(ERR_DEVICE_NOT_CONNECTED);
 	}
 
@@ -123,7 +127,7 @@ PANDAJ2534DLL_API long PTAPI    PassThruOpen(void *pName, unsigned long *pDevice
 	return ret_code(STATUS_NOERROR);
 }
 PANDAJ2534DLL_API long PTAPI	PassThruClose(unsigned long DeviceID) {
-	logA("PassThruClose");
+	logA("PassThruClose, process: 0x%08X", ::GetCurrentProcessId());
 	#pragma EXPORT
 	if (check_valid_DeviceID(DeviceID) != STATUS_NOERROR) return J25334LastError;
 	get_device(DeviceID) = nullptr;
@@ -137,7 +141,6 @@ PANDAJ2534DLL_API long PTAPI	PassThruConnect(unsigned long DeviceID, unsigned lo
 	auto& panda = get_device(DeviceID);
 
 	std::shared_ptr<J2534Connection> conn;
-	logA("PassThruConnect, protocol: 0x%X", ProtocolID);
 	//TODO check if channel can be made
 	try {
 		switch (ProtocolID) {
@@ -183,7 +186,7 @@ PANDAJ2534DLL_API long PTAPI	PassThruConnect(unsigned long DeviceID, unsigned lo
 	unsigned long err = panda->addChannel(conn, &channel_index);
 	if (err == STATUS_NOERROR)
 		*pChannelID = (channel_index << 16) | DeviceID;
-
+	logA("PassThruConnect, protocol: 0x%X, process: 0x%08X, staus: %08X", ProtocolID, ::GetCurrentProcessId(), err);
 	return ret_code(err);
 }
 PANDAJ2534DLL_API long PTAPI	PassThruDisconnect(unsigned long ChannelID) {
@@ -233,6 +236,7 @@ PANDAJ2534DLL_API long PTAPI	PassThruStopMsgFilter(unsigned long ChannelID, unsi
 	return ret_code(get_channel(ChannelID)->PassThruStopMsgFilter(FilterID));
 }
 PANDAJ2534DLL_API long PTAPI	PassThruSetProgrammingVoltage(unsigned long DeviceID, unsigned long PinNumber, unsigned long Voltage) {
+	logA("PassThruSetProgrammingVoltage: 0x%08X", ::GetCurrentProcessId());
 	#pragma EXPORT
 	//Unused
 	if (check_valid_DeviceID(DeviceID) != STATUS_NOERROR) return J25334LastError;
@@ -366,7 +370,7 @@ PANDAJ2534DLL_API long PTAPI	PassThruGetLastError(char *pErrorDescription) {
 }
 PANDAJ2534DLL_API long PTAPI	PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID,
 	                                          void *pInput, void *pOutput) {
-	logA("PassThruIoctl, IoctlID: 0x%X", IoctlID);
+	//logA("PassThruIoctl, IoctlID: 0x%X", IoctlID);
 	#pragma EXPORT
 	if (check_valid_ChannelID(ChannelID) != STATUS_NOERROR) return J25334LastError;
 	auto& dev_entry = get_device(ChannelID);
@@ -406,7 +410,7 @@ PANDAJ2534DLL_API long PTAPI	PassThruIoctl(unsigned long ChannelID, unsigned lon
 			panda::PANDA_HEALTH health = dev_entry->panda->get_health();
 			*(unsigned long*)pOutput = health.voltage;
 		} else
-			*(unsigned long*)pOutput = 5;
+			*(unsigned long*)pOutput = 10000;
 		break;
 	case FIVE_BAUD_INIT:
 		if (!pInput || !pOutput) return ret_code(ERR_NULL_PARAMETER);

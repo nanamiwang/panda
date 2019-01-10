@@ -81,7 +81,7 @@ public:
 		while (recved < desired) {
 			int ret = recv(m_sock, buf + recved, desired - recved, 0);
 			if (ret <= 0) {
-				logA("recv error %d", ret);
+				logA("recv header error %d", ret);
 				return false;
 			}
 			recved += ret;
@@ -91,7 +91,7 @@ public:
 		while (recved < desired) {
 			int ret = recv(m_sock, (out_buf + recved), desired - recved, 0);
 			if (ret <= 0) {
-				logA("recv error %d", ret);
+				logA("recv packet body error %d", ret);
 				return false;
 			}
 			recved += ret;
