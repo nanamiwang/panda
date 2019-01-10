@@ -57,7 +57,7 @@ long J2534Connection::PassThruReadMsgs(PASSTHRU_MSG *pMsg, unsigned long *pNumMs
 			snprintf(buff, sizeof(buff), "%02X", (unsigned char )c);
 			hex += buff;
 		});
-		logA("PassThruReadMsgs, protocol: %X, len: %u, data: %s", msg_out->ProtocolID, msg_out->DataSize, hex.c_str());
+		//logA("PassThruReadMsgs, protocol: %X, len: %u, data: %s", msg_out->ProtocolID, msg_out->DataSize, hex.c_str());
 		if (msgnum == *pNumMsgs) break;
 	}
 

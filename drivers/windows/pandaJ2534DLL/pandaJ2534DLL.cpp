@@ -205,7 +205,7 @@ PANDAJ2534DLL_API long PTAPI	PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_
 	return ret_code(get_channel(ChannelID)->PassThruReadMsgs(pMsg, pNumMsgs, Timeout));
 }
 PANDAJ2534DLL_API long PTAPI	PassThruWriteMsgs(unsigned long ChannelID, PASSTHRU_MSG *pMsg, unsigned long *pNumMsgs, unsigned long Timeout) {
-	logA("PassThruWriteMsgs");
+	//logA("PassThruWriteMsgs");
 	#pragma EXPORT
 	if (pMsg == NULL || pNumMsgs == NULL) return ret_code(ERR_NULL_PARAMETER);
 	if (check_valid_ChannelID(ChannelID) != STATUS_NOERROR) return J25334LastError;
@@ -438,7 +438,7 @@ PANDAJ2534DLL_API long PTAPI	PassThruIoctl(unsigned long ChannelID, unsigned lon
 		*(unsigned long*)pOutput = 0;
 		break;
 	default:
-		printf("Got unknown IIOCTL %X\n", IoctlID);
+		printf("Got unknown IIOCTL %X", IoctlID);
 	}
 
 	return ret_code(STATUS_NOERROR);

@@ -7,6 +7,11 @@
 
 #define PACKET_TYPE_CAN_FRAME 1U
 
+typedef struct  {
+	unsigned short length;
+	unsigned short type;
+}packet_header;
+
 class can_tcp_client {
 public:
 	can_tcp_client() {
@@ -20,7 +25,7 @@ public:
 		WSAStartup(MAKEWORD(2, 0), &WSAData);
 		m_sock = socket(AF_INET, SOCK_STREAM, 0);
 
-		addr.sin_addr.s_addr = inet_addr("192.168.1.100");
+		addr.sin_addr.s_addr = inet_addr("192.168.1.101");
 		addr.sin_family = AF_INET;
 		addr.sin_port = htons(9999);
 
@@ -55,31 +60,30 @@ public:
 	}
 
 	bool send_can_msg(const char *data, unsigned long len) {
-		logA("send_can_msg");
-		unsigned short total_len = htons(sizeof(unsigned short) * 2 + len);
-		unsigned short t = htons(PACKET_TYPE_CAN_FRAME);
-		if (sendall((char *)&total_len, sizeof(unsigned short)) == -1) {
-			logA("Send len error");
-			return false;
-		}
-		if (sendall((char *)&t, sizeof(unsigned short)) == -1) {
-			logA("Send type error");
+		logA("send_can_msg >>");
+		packet_header hdr;
+		hdr.length = htons(sizeof(hdr) + len);
+		hdr.type = htons(PACKET_TYPE_CAN_FRAME);
+		if (sendall((char *)&hdr, sizeof(hdr)) == -1) {
+			logA("Send header error");
 			return false;
 		}
 		if (sendall(data, len) == -1) {
-			logA("Send error");
+			logA("Send payload error");
 			return false;
 		}
-		logA("send_can_msg out");
+		logA("send_can_msg <<");
+		return true;
 	}
 
 	bool recv_can_msg(char *out_buf) {
 		char buf[1024];
 		int len = sizeof(buf);
 		int recved = 0;
-		int desired = sizeof(unsigned short) * 2;
+		packet_header hdr;
+		int desired = sizeof(hdr);
 		while (recved < desired) {
-			int ret = recv(m_sock, buf + recved, desired - recved, 0);
+			int ret = recv(m_sock,(char *)(&hdr) + recved, desired - recved, 0);
 			if (ret <= 0) {
 				logA("recv header error %d", ret);
 				return false;
@@ -87,7 +91,8 @@ public:
 			recved += ret;
 		}
 		recved = 0;
-		desired = 12;
+		logA("recved header, totoal len: %u, type: %u", ntohs(hdr.length), ntohs(hdr.type));
+		desired = ntohs(hdr.length) - sizeof(hdr);
 		while (recved < desired) {
 			int ret = recv(m_sock, (out_buf + recved), desired - recved, 0);
 			if (ret <= 0) {
