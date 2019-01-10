@@ -7,10 +7,12 @@
 
 #define PACKET_TYPE_CAN_FRAME 1U
 
+#pragma pack(1)
 typedef struct  {
 	unsigned short length;
 	unsigned short type;
 }packet_header;
+#pragma pack()
 
 class can_tcp_client {
 public:
@@ -60,7 +62,7 @@ public:
 	}
 
 	bool send_can_msg(const char *data, unsigned long len) {
-		logA("send_can_msg >>");
+		logA("send_can_msg >>, %u", sizeof(packet_header));
 		packet_header hdr;
 		hdr.length = htons(sizeof(hdr) + len);
 		hdr.type = htons(PACKET_TYPE_CAN_FRAME);
@@ -91,7 +93,10 @@ public:
 			recved += ret;
 		}
 		recved = 0;
-		logA("recved header, totoal len: %u, type: %u", ntohs(hdr.length), ntohs(hdr.type));
+		if (ntohs(hdr.length) <= sizeof(hdr)) {
+			logA("invalid total len: %u", ntohs(hdr.length));
+			return false;
+		}
 		desired = ntohs(hdr.length) - sizeof(hdr);
 		while (recved < desired) {
 			int ret = recv(m_sock, (out_buf + recved), desired - recved, 0);
