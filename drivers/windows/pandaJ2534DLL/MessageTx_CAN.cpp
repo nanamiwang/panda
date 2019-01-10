@@ -2,9 +2,6 @@
 #include "MessageTx_CAN.h"
 #include "J2534Connection_CAN.h"
 
-#include "can_tcp_client.h"
-extern can_tcp_client *g_client;
-
 
 MessageTx_CAN::MessageTx_CAN(
 	std::shared_ptr<J2534Connection> connection_in,
@@ -15,8 +12,6 @@ void MessageTx_CAN::execute() {
 	uint32_t addr = ((uint8_t)fullmsg.Data[0]) << 24 | ((uint8_t)fullmsg.Data[1]) << 16 |
 		((uint8_t)fullmsg.Data[2]) << 8 | ((uint8_t)fullmsg.Data[3]);
 
-	if (g_client != nullptr)
-		g_client->send_can_msg(&fullmsg.Data[0], 12);
 #if 0
 	if (auto conn_sp = std::static_pointer_cast<J2534Connection_CAN>(this->connection.lock())) {
 		if (auto panda_dev_sp = conn_sp->getPandaDev()) {

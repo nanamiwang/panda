@@ -127,8 +127,8 @@ DWORD PandaJ2534Device::can_process_thread() {
 		char buf[12];
 		if (!g_client->recv_can_msg(buf))
 			break;
-		//if (buf[2] == 0x03 || buf[2] == 0x01)
-			//continue;
+		if (buf[2] == 0x03 || buf[2] == 0x01)
+			continue;
 		J2534Frame msg_out(buf);
 		for (auto& conn : this->connections)
 			if (conn != nullptr && conn->isProtoCan())

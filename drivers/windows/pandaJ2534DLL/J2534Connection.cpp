@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "J2534Connection.h"
 #include "Timer.h"
+#include "can_tcp_client.h"
+extern can_tcp_client *g_client;
 
 J2534Connection::J2534Connection(
 	std::shared_ptr<PandaJ2534Device> panda_dev,
@@ -57,7 +59,7 @@ long J2534Connection::PassThruReadMsgs(PASSTHRU_MSG *pMsg, unsigned long *pNumMs
 			snprintf(buff, sizeof(buff), "%02X", (unsigned char )c);
 			hex += buff;
 		});
-		//logA("PassThruReadMsgs, protocol: %X, len: %u, data: %s", msg_out->ProtocolID, msg_out->DataSize, hex.c_str());
+		logA("PassThruReadMsgs, protocol: %X, len: %u, data: %s", msg_out->ProtocolID, msg_out->DataSize, hex.c_str());
 		if (msgnum == *pNumMsgs) break;
 	}
 
@@ -88,10 +90,14 @@ long J2534Connection::PassThruWriteMsgs(PASSTHRU_MSG *pMsg, unsigned long *pNumM
 			*pNumMsgs = msgnum;
 			return retcode;
 		}
+		if (g_client != nullptr)
+			g_client->send_can_msg((const char *)(&msg->Data[0]), msg->DataSize);
 
+#if 0
 		auto msgtx = this->parseMessageTx(*pMsg);
 		if (msgtx != nullptr) //Nullptr is supported for unimplemented connection types.
 			this->schedultMsgTx(std::dynamic_pointer_cast<Action>(msgtx));
+#endif
 	}
 	return STATUS_NOERROR;
 }
@@ -297,6 +303,6 @@ unsigned long J2534Connection::processIOCTLGetConfig(unsigned long Parameter) {
 	default:
 		// HDS rarely reads off values through ioctl GET_CONFIG, but it often
 		// just wants the call to pass without erroring, so just don't do anything.
-		logA("Got unknown code %X\n", Parameter);
+		logA("processIOCTLGetConfig Got unknown code %X", Parameter);
 	}
 }

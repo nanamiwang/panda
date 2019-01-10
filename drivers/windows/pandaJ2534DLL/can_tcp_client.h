@@ -62,7 +62,6 @@ public:
 	}
 
 	bool send_can_msg(const char *data, unsigned long len) {
-		logA("send_can_msg >>, %u", sizeof(packet_header));
 		packet_header hdr;
 		hdr.length = htons(sizeof(hdr) + len);
 		hdr.type = htons(PACKET_TYPE_CAN_FRAME);
@@ -74,7 +73,6 @@ public:
 			logA("Send payload error");
 			return false;
 		}
-		logA("send_can_msg <<");
 		return true;
 	}
 
