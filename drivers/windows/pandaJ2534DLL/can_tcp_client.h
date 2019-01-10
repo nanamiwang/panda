@@ -76,7 +76,7 @@ public:
 		return true;
 	}
 
-	bool recv_can_msg(char *out_buf) {
+	bool recv_can_msg(char *out_buf, unsigned short *plen) {
 		char buf[1024];
 		int len = sizeof(buf);
 		int recved = 0;
@@ -104,6 +104,7 @@ public:
 			}
 			recved += ret;
 		}
+		*plen = desired;
 		return true;
 	}
 

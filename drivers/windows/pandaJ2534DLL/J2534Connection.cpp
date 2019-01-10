@@ -280,7 +280,7 @@ void J2534Connection::processIOCTLSetConfig(unsigned long Parameter, unsigned lo
 	case T5_MAX:
 		break;				// Just smile and nod.
 	default:
-		logA("Got unknown SET code %X\n", Parameter);
+		logA("Got unknown SET code %X", Parameter);
 	}
 
 	// reserved parameters usually mean special equiptment is required

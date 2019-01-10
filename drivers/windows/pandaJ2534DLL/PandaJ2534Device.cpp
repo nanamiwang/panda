@@ -124,12 +124,13 @@ DWORD PandaJ2534Device::can_process_thread() {
 	while (true) {
 		if (WaitForSingleObject(this->thread_kill_event, 0) == WAIT_OBJECT_0)
 			break;
-		char buf[12];
-		if (!g_client->recv_can_msg(buf))
+		char buf[128];
+		unsigned short len = 0U;
+		if (!g_client->recv_can_msg(buf, &len))
 			break;
 		if (buf[2] == 0x03 || buf[2] == 0x01)
 			continue;
-		J2534Frame msg_out(buf);
+		J2534Frame msg_out(buf, len);
 		for (auto& conn : this->connections)
 			if (conn != nullptr && conn->isProtoCan())
 				conn->processMessage(msg_out);
